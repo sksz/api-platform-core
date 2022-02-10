@@ -260,17 +260,17 @@ final class OpenApiFactory implements OpenApiFactoryInterface
                 }
             }
 
+            $operationInputSchemas = [];
+            foreach ($requestMimeTypes as $operationFormat) {
+                $operationInputSchema = $this->jsonSchemaFactory->buildSchema($resourceClass, $operationFormat, Schema::TYPE_INPUT, null, $operationName, $schema, null, $forceSchemaCollection);
+                $operationInputSchemas[$operationFormat] = $operationInputSchema;
+                $this->appendSchemaDefinitions($schemas, $operationInputSchema->getDefinitions());
+            }
+
             $requestBody = null;
             if ($contextRequestBody = $operation['openapi_context']['requestBody'] ?? false) {
                 $requestBody = new Model\RequestBody($contextRequestBody['description'] ?? '', new \ArrayObject($contextRequestBody['content']), $contextRequestBody['required'] ?? false);
             } elseif ('PUT' === $method || 'POST' === $method || 'PATCH' === $method) {
-                $operationInputSchemas = [];
-                foreach ($requestMimeTypes as $operationFormat) {
-                    $operationInputSchema = $this->jsonSchemaFactory->buildSchema($resourceClass, $operationFormat, Schema::TYPE_INPUT, $operationType, $operationName, $schema, null, $forceSchemaCollection);
-                    $operationInputSchemas[$operationFormat] = $operationInputSchema;
-                    $this->appendSchemaDefinitions($schemas, $operationInputSchema->getDefinitions());
-                }
-
                 $requestBody = new Model\RequestBody(sprintf('The %s %s resource', 'POST' === $method ? 'new' : 'updated', $resourceShortName), $this->buildContent($requestMimeTypes, $operationInputSchemas), true);
             }
 
